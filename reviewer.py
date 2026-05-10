@@ -9,7 +9,8 @@ import sys
 import re
 import json
 import requests
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 # ==============================================================================
 # Retrieve Environment Variables (Injected by GitHub Actions)
@@ -147,15 +148,14 @@ Your task is to review the following git diff against the provided project rules
 
     # 5. Call Gemini API (Google AI Studio)
     print("::group::Calling Gemini API")
-    genai.configure(api_key=GEMINI_API_KEY)
-    
-    # Use standard gemini-1.5-flash for cost-effectiveness and speed
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
     try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
+        # Using the new google-genai client
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
                 temperature=0.0, # Deterministic output
             )
         )
