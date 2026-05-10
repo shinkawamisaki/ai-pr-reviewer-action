@@ -1,0 +1,25 @@
+name: 'AI PR Reviewer'
+description: 'Strict, rule-based AI Pull Request Reviewer using Google Gemini API'
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  github_token:
+    description: 'GITHUB_TOKEN to comment on PRs'
+    required: true
+  gemini_api_key:
+    description: 'Gemini API Key from Google AI Studio'
+    required: true
+  rules_file:
+    description: 'Path to the repository rules file (e.g., .clinerules, CONTRIBUTING.md)'
+    required: false
+    default: '.clinerules'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    GITHUB_TOKEN: ${{ inputs.github_token }}
+    GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
+    RULES_FILE: ${{ inputs.rules_file }}
