@@ -66,3 +66,13 @@ If you are using the Gemini API free tier, large Pull Requests with many files m
 
 ## Permissions
 The action requires `pull-requests: write` permission to post and update comments.
+
+## Author
+**shinkawa.misaki**
+
+- **GitHub**: [shinkawamisaki](https://github.com/shinkawamisaki)
+- **YOUTRUST**: [shinkawa](https://youtrust.jp/users/shinkawa)
+- **Email**: [shinkawa.misaki@gmail.com](mailto:shinkawa.misaki@gmail.com)
+
+## License
+Apache License 2.0
