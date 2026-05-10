@@ -64,7 +64,10 @@ def redact_sensitive_info(text):
     """Mask sensitive information before sending to AI API."""
     if not text:
         return text
-    text = re.sub(r'(?i)(password|secret|token|api[_-]?key|credentials)["\'\s:=]+[^\s"\'},]+', r'\1: [REDACTED]', text)
+    # Mask values in key-value assignments, but avoid masking environment variable names in os.getenv()
+    # Masking pattern: matches 'password="val"', 'secret: val', etc. but excludes common coding patterns
+    text = re.sub(r'(?i)(password|secret|token|api[_-]?key|credentials)["\'\s:=]+(?!"[A-Z0-9_-]+")([^\s"\'},]+)', r'\1: [REDACTED]', text)
+    # Basic redaction for internal IPs
     text = re.sub(r'\b(?:10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)[0-9.]+\b', '[REDACTED_IP]', text)
     return text
 
