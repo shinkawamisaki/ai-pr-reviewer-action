@@ -19,6 +19,10 @@ inputs:
     description: 'Path to save the review result as a file (e.g., review.md). Optional.'
     required: false
     default: ''
+  exclude_patterns:
+    description: 'Comma-separated glob patterns to ignore (e.g., "*.lock,dist/*,*.json").'
+    required: false
+    default: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*,vendor/*'
 
 runs:
   using: 'docker'
@@ -28,3 +32,4 @@ runs:
     GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
     RULES_FILE: ${{ inputs.rules_file }}
     OUTPUT_PATH: ${{ inputs.output_path }}
+    EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}

@@ -8,6 +8,8 @@ import os
 import sys
 import re
 import json
+import time
+import fnmatch
 import requests
 from google import genai
 from google.genai import types
@@ -75,6 +77,7 @@ def main():
     gemini_api_key = os.environ.get("GEMINI_API_KEY")
     rules_file = os.environ.get("RULES_FILE", ".clinerules")
     output_path = os.environ.get("OUTPUT_PATH")
+    exclude_patterns = os.environ.get("EXCLUDE_PATTERNS", "").split(",")
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     github_event_path = os.environ.get("GITHUB_EVENT_PATH")
     github_workspace = os.environ.get("GITHUB_WORKSPACE", "/github/workspace")
@@ -101,6 +104,31 @@ def main():
     # 1. Fetch Diff
     try:
         diff_content = get_pr_diff(github_repository, pr_number, diff_headers)
+        
+        # Apply ignore patterns (Exclude unwanted files from diff)
+        if exclude_patterns:
+            filtered_diff = []
+            # Split diff by file (approximate)
+            files_diff = re.split(r'^(diff --git .*)', diff_content, flags=re.MULTILINE)
+            
+            # files_diff[0] is often empty or preamble
+            for i in range(1, len(files_diff), 2):
+                header = files_diff[i]
+                content = files_diff[i+1] if i+1 < len(files_diff) else ""
+                
+                # Extract filename from header: "diff --git a/path/to/file b/path/to/file"
+                match = re.search(r'b/(.*)$', header.split('\n')[0])
+                if match:
+                    filename = match.group(1).strip()
+                    should_exclude = any(fnmatch.fnmatch(filename, pattern.strip()) for pattern in exclude_patterns if pattern.strip())
+                    if should_exclude:
+                        print(f"::notice::Excluding file from review: {filename}")
+                        continue
+                
+                filtered_diff.append(header + content)
+            
+            diff_content = "".join(filtered_diff)
+
     except Exception as e:
         print(f"::error::Failed to fetch PR diff: {e}")
         sys.exit(1)
@@ -147,19 +175,31 @@ Your task is to review the following git diff against the provided project rules
 
     # 5. Call Gemini API (Google AI Studio)
     print("::group::Calling Gemini API")
-    try:
-        client = genai.Client(api_key=gemini_api_key)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.0,
+    
+    # Retry logic for rate limits
+    max_retries = 3
+    retry_delay = 10 # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            client = genai.Client(api_key=gemini_api_key)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.0,
+                )
             )
-        )
-        result_text = response.text.strip()
-    except Exception as e:
-        print(f"::error::Gemini API call failed: {e}")
-        sys.exit(1)
+            result_text = response.text.strip()
+            break # Success!
+        except Exception as e:
+            if "429" in str(e) and attempt < max_retries - 1:
+                print(f"::warning::Rate limit hit (429). Retrying in {retry_delay}s... (Attempt {attempt + 1}/{max_retries})")
+                time.sleep(retry_delay)
+                continue
+            else:
+                print(f"::error::Gemini API call failed after {attempt + 1} attempts: {e}")
+                sys.exit(1)
 
     print("::endgroup::")
 

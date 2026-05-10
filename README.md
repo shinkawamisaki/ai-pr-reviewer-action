@@ -12,6 +12,8 @@ Google AI Studio (Gemini API) を活用した、ルールベースで厳格な A
   - Draft状態のPRでは、違反があってもActionを「FAIL（赤×）」にせず、開発の妨げになりません。
   - 毎回新しいコメントを投稿してタイムラインを荒らすのではなく、AIのコメントを上書き（Update）して綺麗に保ちます。
 - **高コスパ**: Google AI Studio API の `gemini-1.5-flash` モデルを使用しており、高速かつ低コストで動作します。
+- **除外設定 (Ignore Patterns)**: `*.lock` や `dist/*` などの不要なファイルを除外して、APIコストの節約とノイズ削減が可能です。
+- **レート制限への配慮**: Gemini API の無料枠利用時でも安定して動作するよう、簡易的なリトライロジックを内蔵しています。
 - **ログの永続化（蓄積）**: レビュー結果を任意のパスにファイル出力できます。GitHub Actionsの Artifacts 機能と組み合わせることで、過去の全レビュー結果を「証跡」として溜めておくことが可能です。
 
 ## 使い方 (Usage)
@@ -51,6 +53,8 @@ jobs:
           rules_file: '.clinerules'
           # オプション: レビュー結果をファイルとして保存したい場合にパスを指定します
           output_path: 'review-result.md'
+          # オプション: レビュー対象から除外したいファイルのパターンを指定します
+          exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
 
       # 保存したレビュー結果を活用する例（GitHub Artifactとして保存）
       - name: Upload review result
