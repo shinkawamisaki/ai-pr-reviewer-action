@@ -1,7 +1,7 @@
 name: 'AI PR Reviewer'
 description: 'Strict, rule-based AI Pull Request Reviewer using Google Gemini API'
 branding:
-  icon: 'check-circle'
+  icon: 'check-square'
   color: 'blue'
 
 inputs:
