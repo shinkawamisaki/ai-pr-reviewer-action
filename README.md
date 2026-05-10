@@ -61,3 +61,18 @@ AIに「どういう基準でレビューしてほしいか」を教えるため
 
 ## 必要な権限 (Permissions)
 このアクションはPRに対してコメントを書き込む権限が必要です。通常はデフォルトで設定されていますが、うまく動かない場合は、リポジトリの **Settings > Actions > General > Workflow permissions** が「Read and write permissions」になっているか確認してください。
+
+
+ [1.0.0] - 2026-05-10
+- 初回リリース
+
+## 作者 (Author)
+
+**shinkawa.misaki**
+
+- **GitHub**: [shinkawamisaki](https://github.com/shinkawamisaki)
+- **YOUTRUST**: [shinkawa](https://youtrust.jp/users/shinkawa)
+- **Email**: [shinkawa.misaki@gmail.com](mailto:shinkawa.misaki@gmail.com)
+
+## ライセンス
+Apache License 2.0
