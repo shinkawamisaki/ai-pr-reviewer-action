@@ -48,6 +48,16 @@ jobs:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           # オプション: 読み込ませたいルールファイルのパスを指定します（デフォルトは '.clinerules'）
           rules_file: '.clinerules'
+          # オプション: レビュー結果をファイルとして保存したい場合にパスを指定します
+          output_path: 'review-result.md'
+
+      # 保存したレビュー結果を活用する例（GitHub Artifactとして保存）
+      - name: Upload review result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-report
+          path: review-result.md
 ```
 
 ### 3. プロジェクトルールの追加（推奨）

@@ -18,6 +18,7 @@ from google.genai import types
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 RULES_FILE = os.environ.get("RULES_FILE", ".clinerules")
+OUTPUT_PATH = os.environ.get("OUTPUT_PATH")
 
 # GitHub Actions exposes these automatically
 GITHUB_REPOSITORY = os.environ.get("GITHUB_REPOSITORY")
@@ -167,25 +168,41 @@ Your task is to review the following git diff against the provided project rules
     print("::endgroup::")
 
     # 6. Evaluate Result and Post Comment
-    if "RESULT: FAIL" in result_text:
+    is_fail = "RESULT: FAIL" in result_text
+    clean_text = result_text.replace('RESULT: FAIL', '').replace('RESULT: PASS', '').strip()
+    
+    if is_fail:
         print("::warning::Violations detected by AI Reviewer.")
-        clean_text = result_text.replace('RESULT: FAIL', '').strip()
         comment_body = f"### 🤖 AI PR Reviewer\n\n🚨 **プロジェクトルールへの違反、またはセキュリティリスクを検知しました。**\n\n{clean_text}"
-        post_or_update_comment(comment_body)
-        
-        # If PR is a Draft, do not fail the GitHub Action check
+    else:
+        print("::notice::AI Reviewer passed.")
+        comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AIレビューを通過しました。**\n\n{clean_text}"
+    
+    post_or_update_comment(comment_body)
+
+    # 7. Export result to file if OUTPUT_PATH is specified
+    if OUTPUT_PATH:
+        try:
+            # Create directory if it doesn't exist
+            output_dir = os.path.dirname(OUTPUT_PATH)
+            if output_dir and not os.path.exists(output_dir):
+                os.makedirs(output_dir, exist_ok=True)
+            
+            with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+                f.write(clean_text)
+            print(f"::notice::Review result exported to {OUTPUT_PATH}")
+        except Exception as e:
+            print(f"::error::Failed to export review result: {e}")
+
+    # 8. Set exit status
+    if is_fail:
         if IS_DRAFT:
             print("::notice::PR is in Draft state. Action will pass despite violations.")
             sys.exit(0)
         else:
             print("::error::PR rejected by AI Reviewer.")
             sys.exit(1)
-            
     else:
-        print("::notice::AI Reviewer passed.")
-        clean_text = result_text.replace('RESULT: PASS', '').strip()
-        comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AIレビューを通過しました。**\n\n{clean_text}"
-        post_or_update_comment(comment_body)
         sys.exit(0)
 
 if __name__ == "__main__":

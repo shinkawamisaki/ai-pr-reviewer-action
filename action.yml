@@ -15,6 +15,10 @@ inputs:
     description: 'Path to the repository rules file (e.g., .clinerules, CONTRIBUTING.md)'
     required: false
     default: '.clinerules'
+  output_path:
+    description: 'Path to save the review result as a file (e.g., review.md). Optional.'
+    required: false
+    default: ''
 
 runs:
   using: 'docker'
@@ -23,3 +27,4 @@ runs:
     GITHUB_TOKEN: ${{ inputs.github_token }}
     GEMINI_API_KEY: ${{ inputs.gemini_api_key }}
     RULES_FILE: ${{ inputs.rules_file }}
+    OUTPUT_PATH: ${{ inputs.output_path }}
