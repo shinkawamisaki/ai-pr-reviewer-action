@@ -13,73 +13,47 @@ from google import genai
 from google.genai import types
 
 # ==============================================================================
-# Retrieve Environment Variables (Injected by GitHub Actions)
-# ==============================================================================
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-RULES_FILE = os.environ.get("RULES_FILE", ".clinerules")
-OUTPUT_PATH = os.environ.get("OUTPUT_PATH")
-
-# GitHub Actions exposes these automatically
-GITHUB_REPOSITORY = os.environ.get("GITHUB_REPOSITORY")
-GITHUB_EVENT_PATH = os.environ.get("GITHUB_EVENT_PATH")
-GITHUB_WORKSPACE = os.environ.get("GITHUB_WORKSPACE", "/github/workspace")
-
-if not all([GITHUB_TOKEN, GEMINI_API_KEY, GITHUB_REPOSITORY, GITHUB_EVENT_PATH]):
-    print("::error::Missing required environment variables.")
-    sys.exit(1)
-
-# Parse event payload to get PR information
-with open(GITHUB_EVENT_PATH, "r") as f:
-    event_data = json.load(f)
-
-if "pull_request" not in event_data:
-    print("::notice::Not a pull request event. Skipping AI review.")
-    sys.exit(0)
-
-PR_NUMBER = event_data["pull_request"]["number"]
-COMMIT_SHA = event_data["pull_request"]["head"]["sha"]
-IS_DRAFT = event_data["pull_request"].get("draft", False)
-
-# ==============================================================================
 # GitHub API Helpers
 # ==============================================================================
-GH_HEADERS_JSON = {
-    "Authorization": f"token {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28"
-}
+def make_json_headers(token):
+    return {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
 
-GH_HEADERS_DIFF = {
-    "Authorization": f"token {GITHUB_TOKEN}",
-    "Accept": "application/vnd.github.v3.diff",
-    "X-GitHub-Api-Version": "2022-11-28"
-}
+def make_diff_headers(token):
+    return {
+        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.v3.diff",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
 
-def get_pr_diff():
-    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/pulls/{PR_NUMBER}"
-    resp = requests.get(url, headers=GH_HEADERS_DIFF)
+def get_pr_diff(repository, pr_number, headers):
+    url = f"https://api.github.com/repos/{repository}/pulls/{pr_number}"
+    resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
     return resp.text
 
-def post_or_update_comment(body_text):
-    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/issues/{PR_NUMBER}/comments"
-    resp = requests.get(url, headers=GH_HEADERS_JSON)
+def post_or_update_comment(repository, pr_number, headers, body_text):
+    url = f"https://api.github.com/repos/{repository}/issues/{pr_number}/comments"
+    resp = requests.get(url, headers=headers, timeout=30)
     resp.raise_for_status()
     comments = resp.json()
-    
+
     bot_comment_id = None
     for c in comments:
-        # Identify previous comments made by this action
         if "🤖 AI PR Reviewer" in c.get("body", ""):
             bot_comment_id = c["id"]
             break
-            
+
     if bot_comment_id:
-        update_url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/issues/comments/{bot_comment_id}"
-        requests.patch(update_url, headers=GH_HEADERS_JSON, json={"body": body_text})
+        update_url = f"https://api.github.com/repos/{repository}/issues/comments/{bot_comment_id}"
+        resp = requests.patch(update_url, headers=headers, json={"body": body_text}, timeout=30)
+        resp.raise_for_status()
     else:
-        requests.post(url, headers=GH_HEADERS_JSON, json={"body": body_text})
+        resp = requests.post(url, headers=headers, json={"body": body_text}, timeout=30)
+        resp.raise_for_status()
 
 # ==============================================================================
 # Security Masking (Redaction)
@@ -88,9 +62,7 @@ def redact_sensitive_info(text):
     """Mask sensitive information before sending to AI API."""
     if not text:
         return text
-    # Basic redaction for secrets, passwords, tokens
     text = re.sub(r'(?i)(password|secret|token|api[_-]?key|credentials)["\'\s:=]+[^\s"\'},]+', r'\1: [REDACTED]', text)
-    # Basic redaction for internal IPs
     text = re.sub(r'\b(?:10\.|172\.(?:1[6-9]|2[0-9]|3[0-1])\.|192\.168\.)[0-9.]+\b', '[REDACTED_IP]', text)
     return text
 
@@ -98,33 +70,59 @@ def redact_sensitive_info(text):
 # Main Logic
 # ==============================================================================
 def main():
-    print(f"::group::Initializing AI PR Reviewer for PR #{PR_NUMBER}")
-    
+    # Retrieve Environment Variables (Injected by GitHub Actions)
+    github_token = os.environ.get("GITHUB_TOKEN")
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    rules_file = os.environ.get("RULES_FILE", ".clinerules")
+    output_path = os.environ.get("OUTPUT_PATH")
+    github_repository = os.environ.get("GITHUB_REPOSITORY")
+    github_event_path = os.environ.get("GITHUB_EVENT_PATH")
+    github_workspace = os.environ.get("GITHUB_WORKSPACE", "/github/workspace")
+
+    if not all([github_token, gemini_api_key, github_repository, github_event_path]):
+        print("::error::Missing required environment variables.")
+        sys.exit(1)
+
+    with open(github_event_path, "r") as f:
+        event_data = json.load(f)
+
+    if "pull_request" not in event_data:
+        print("::notice::Not a pull request event. Skipping AI review.")
+        sys.exit(0)
+
+    pr_number = event_data["pull_request"]["number"]
+    is_draft = event_data["pull_request"].get("draft", False)
+
+    json_headers = make_json_headers(github_token)
+    diff_headers = make_diff_headers(github_token)
+
+    print(f"::group::Initializing AI PR Reviewer for PR #{pr_number}")
+
     # 1. Fetch Diff
     try:
-        diff_content = get_pr_diff()
+        diff_content = get_pr_diff(github_repository, pr_number, diff_headers)
     except Exception as e:
         print(f"::error::Failed to fetch PR diff: {e}")
         sys.exit(1)
-        
+
     if not diff_content.strip():
         print("::notice::No diff found. Skipping review.")
         sys.exit(0)
 
     # 2. Read Rules File from workspace
-    rules_path = os.path.join(GITHUB_WORKSPACE, RULES_FILE)
+    rules_path = os.path.join(github_workspace, rules_file)
     rules_content = ""
     if os.path.exists(rules_path):
         with open(rules_path, "r", encoding="utf-8") as f:
             rules_content = f.read()
-        print(f"::notice::Loaded rules from {RULES_FILE}")
+        print(f"::notice::Loaded rules from {rules_file}")
     else:
-        print(f"::warning::Rules file '{RULES_FILE}' not found. Review will be based on general best practices.")
+        print(f"::warning::Rules file '{rules_file}' not found. Review will be based on general best practices.")
 
     # 3. Redact Sensitive Information
     rules_content_masked = redact_sensitive_info(rules_content)
     diff_content_masked = redact_sensitive_info(diff_content)
-    
+
     print("::endgroup::")
 
     # 4. Construct Prompt
@@ -150,53 +148,53 @@ Your task is to review the following git diff against the provided project rules
     # 5. Call Gemini API (Google AI Studio)
     print("::group::Calling Gemini API")
     try:
-        # Using the new google-genai client
-        client = genai.Client(api_key=GEMINI_API_KEY)
-        
+        client = genai.Client(api_key=gemini_api_key)
         response = client.models.generate_content(
             model='gemini-2.5-flash',
             contents=prompt,
             config=types.GenerateContentConfig(
-                temperature=0.0, # Deterministic output
+                temperature=0.0,
             )
         )
         result_text = response.text.strip()
     except Exception as e:
         print(f"::error::Gemini API call failed: {e}")
         sys.exit(1)
-        
+
     print("::endgroup::")
 
     # 6. Evaluate Result and Post Comment
     is_fail = "RESULT: FAIL" in result_text
     clean_text = result_text.replace('RESULT: FAIL', '').replace('RESULT: PASS', '').strip()
-    
+
     if is_fail:
         print("::warning::Violations detected by AI Reviewer.")
         comment_body = f"### 🤖 AI PR Reviewer\n\n🚨 **プロジェクトルールへの違反、またはセキュリティリスクを検知しました。**\n\n{clean_text}"
     else:
         print("::notice::AI Reviewer passed.")
         comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AIレビューを通過しました。**\n\n{clean_text}"
-    
-    post_or_update_comment(comment_body)
+
+    try:
+        post_or_update_comment(github_repository, pr_number, json_headers, comment_body)
+    except Exception as e:
+        print(f"::error::Failed to post comment: {e}")
+        sys.exit(1)
 
     # 7. Export result to file if OUTPUT_PATH is specified
-    if OUTPUT_PATH:
+    if output_path:
         try:
-            # Create directory if it doesn't exist
-            output_dir = os.path.dirname(OUTPUT_PATH)
-            if output_dir and not os.path.exists(output_dir):
+            output_dir = os.path.dirname(output_path)
+            if output_dir:
                 os.makedirs(output_dir, exist_ok=True)
-            
-            with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+            with open(output_path, "w", encoding="utf-8") as f:
                 f.write(clean_text)
-            print(f"::notice::Review result exported to {OUTPUT_PATH}")
+            print(f"::notice::Review result exported to {output_path}")
         except Exception as e:
             print(f"::error::Failed to export review result: {e}")
 
     # 8. Set exit status
     if is_fail:
-        if IS_DRAFT:
+        if is_draft:
             print("::notice::PR is in Draft state. Action will pass despite violations.")
             sys.exit(0)
         else:
