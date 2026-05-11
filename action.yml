@@ -1,4 +1,4 @@
-name: 'Gemini AI PR Reviewer'
+name: 'AI PR Reviewer (by Misaki)'
 description: 'Strict, rule-based AI Pull Request Reviewer using Google Gemini API'
 branding:
   icon: 'check-square'
