@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 AI PR Reviewer Action
-A strict, rule-based AI Pull Request Reviewer using Google AI Studio (Gemini API).
+A strict, rule-based AI Pull Request Reviewer supporting multiple AI providers via LiteLLM.
 """
 
 import os
@@ -11,8 +11,7 @@ import json
 import time
 import fnmatch
 import requests
-from google import genai
-from google.genai import types
+import litellm
 
 # ==============================================================================
 # GitHub API Helpers
@@ -78,7 +77,7 @@ def redact_sensitive_info(text):
 def main():
     # Retrieve Environment Variables (Injected by GitHub Actions)
     github_token = os.environ.get("GITHUB_TOKEN")
-    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    ai_model = os.environ.get("AI_MODEL", "gemini/gemini-2.5-flash")
     rules_file = os.environ.get("RULES_FILE", ".clinerules")
     output_path = os.environ.get("OUTPUT_PATH")
     exclude_patterns = os.environ.get("EXCLUDE_PATTERNS", "").split(",")
@@ -87,8 +86,21 @@ def main():
     github_event_path = os.environ.get("GITHUB_EVENT_PATH")
     github_workspace = os.environ.get("GITHUB_WORKSPACE", "/github/workspace")
 
-    if not all([github_token, gemini_api_key, github_repository, github_event_path]):
+    if not all([github_token, github_repository, github_event_path]):
         print("::error::Missing required environment variables.")
+        sys.exit(1)
+
+    # Validate that an API key is provided for the selected provider
+    provider = ai_model.split("/")[0] if "/" in ai_model else "openai"
+    api_key_map = {
+        "gemini": os.environ.get("GEMINI_API_KEY"),
+        "claude": os.environ.get("ANTHROPIC_API_KEY"),
+        "anthropic": os.environ.get("ANTHROPIC_API_KEY"),
+        "openai": os.environ.get("OPENAI_API_KEY"),
+        "gpt": os.environ.get("OPENAI_API_KEY"),
+    }
+    if provider in api_key_map and not api_key_map[provider]:
+        print(f"::error::No API key found for provider '{provider}'. Set the corresponding secret (e.g., GEMINI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY).")
         sys.exit(1)
 
     with open(github_event_path, "r") as f:
@@ -104,7 +116,7 @@ def main():
     json_headers = make_json_headers(github_token)
     diff_headers = make_diff_headers(github_token)
 
-    print(f"::group::Initializing AI PR Reviewer for PR #{pr_number}")
+    print(f"::group::Initializing AI PR Reviewer for PR #{pr_number} (model: {ai_model})")
 
     # 1. Fetch Diff
     try:
@@ -178,32 +190,28 @@ Your task is to review the following git diff against the provided project rules
    - If there are violations or risks: Write "RESULT: FAIL" on the first line, followed by detailed reasons and actionable suggestions.
 """
 
-    # 5. Call Gemini API (Google AI Studio)
-    print("::group::Calling Gemini API")
-    
-    # Retry logic for rate limits
+    # 5. Call AI API via LiteLLM
+    print(f"::group::Calling AI API (model: {ai_model})")
+
     max_retries = 3
-    retry_delay = 10 # seconds
-    
+    retry_delay = 10
+
     for attempt in range(max_retries):
         try:
-            client = genai.Client(api_key=gemini_api_key)
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.0,
-                )
+            response = litellm.completion(
+                model=ai_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.0,
             )
-            result_text = response.text.strip()
-            break # Success!
+            result_text = response.choices[0].message.content.strip()
+            break
         except Exception as e:
             if "429" in str(e) and attempt < max_retries - 1:
                 print(f"::warning::Rate limit hit (429). Retrying in {retry_delay}s... (Attempt {attempt + 1}/{max_retries})")
                 time.sleep(retry_delay)
                 continue
             else:
-                print(f"::error::Gemini API call failed after {attempt + 1} attempts: {e}")
+                print(f"::error::AI API call failed after {attempt + 1} attempts: {e}")
                 sys.exit(1)
 
     print("::endgroup::")
