@@ -1,4 +1,4 @@
-# AI PR Reviewer Action
+# AI PR Reviewer (by Misaki)
 
 A strict, rule-based AI Pull Request Reviewer GitHub Action using Google AI Studio (Gemini API).
 

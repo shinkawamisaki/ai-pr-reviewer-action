@@ -1,4 +1,4 @@
-# AI PR Reviewer Action
+# AI PR Reviewer (by Misaki)
 
 Google AI Studio (Gemini API) を活用した、ルールベースで厳格な AI Pull Request レビュアー GitHub Action です。
 
@@ -100,7 +100,7 @@ AIに「どういう基準でレビューしてほしいか」を教えるため
 ## 変更履歴 (Changelog)
 
 ### [1.0.0] - 2026-05-10
-- 初回リリース
+- 初回リリース（Gemini 2.5-flash 対応、マルチ言語、除外設定、ファイル出力機能搭載）
 
 ## 作者 (Author)
 
