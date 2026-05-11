@@ -26,7 +26,7 @@ Get a free API key from [Google AI Studio](https://aistudio.google.com/). Add it
 Create `.github/workflows/ai-pr-reviewer.yml` in your repository:
 
 ```yaml
-name: AI PR Reviewer
+name: Gemini AI PR Reviewer
 
 on:
   pull_request:
@@ -51,23 +51,45 @@ jobs:
           # Optional: Path to your custom rules file. Defaults to '.clinerules'
           rules_file: '.clinerules'
           # Optional: Path to save the review result for accumulation
-          output_path: 'review-result.md'
+          output_path: 'ai-review-report.md'
           # Optional: Comma-separated glob patterns to ignore (e.g., lock files, compiled output)
           exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
           # Optional: Output language for review comments (e.g., 'en-US' or 'ja-JP'). Defaults to 'ja-JP'.
           language: 'en-US'
 
       # Example: Storing the review result using GitHub Artifacts
-      - name: Upload review result
+      - name: Upload review report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ai-review-report
-          path: review-result.md
+          path: ai-review-report.md
 ```
 
-### 3. Rate Limits
-If you are using the Gemini API free tier, large Pull Requests with many files may hit rate limits. This action includes basic retry logic, but for very large PRs, you may see some delays or partial reviews.
+### 3. Log Confirmation & Accumulation
+If you set the `output_path`, you can download and review the AI's findings after the GitHub Action completes by following these steps:
+
+1. Open the **Actions** tab of the target repository.
+2. Click on the latest workflow execution result.
+3. Download the `ai-review-report` from the **Artifacts** section at the bottom of the page.
+
+Reviewing these logs regularly helps in analyzing AI feedback and identifying areas for rule improvement.
+
+### 4. Add Project Rules (Optional but Recommended)
+Create a `.clinerules` or `REVIEW_GUIDELINES.md` file in the root of your repository to dictate how the AI should evaluate code.
+
+Example `.clinerules`:
+```markdown
+# Project Guidelines
+1. Never hardcode passwords or API keys. Always use environment variables.
+2. Ensure proper error handling. Do not use bare `except:` or `catch(e)`.
+3. All internal IP addresses must be configurable.
+```
+
+## Limitations
+
+- **Prompt Injection**: Since PR diffs are passed directly to the AI prompt, malicious code comments could potentially manipulate the AI's judgment. AI review results should be treated as reference information, and final decisions should always be made by a human.
+- **Masking Scope**: Masking is primarily targeted at literal strings in quotes. Secrets without quotes (e.g., certain JWTs) or non-standard variable names might not be detected.
 
 ## Permissions
 The action requires `pull-requests: write` permission to post and update comments.

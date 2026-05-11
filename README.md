@@ -28,7 +28,7 @@ Google AI Studio (Gemini API) を活用した、ルールベースで厳格な A
 導入先リポジトリに `.github/workflows/` というフォルダ（なければ新規作成）を作り、その中に `ai-pr-reviewer.yml` という空のファイルを作成して、以下のコードをコピー＆ペーストしてください。これだけで「ワンパン」で導入可能です：
 
 ```yaml
-name: AI PR Reviewer
+name: Gemini AI PR Reviewer
 
 on:
   pull_request:
@@ -37,8 +37,9 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
-    # オプション: Draft状態のPRではワークフロー自体を動かしたくない場合はコメントアウトを外してください
-    # if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+      pull-requests: write
     
     steps:
       - name: Checkout code
@@ -52,19 +53,19 @@ jobs:
           # オプション: 読み込ませたいルールファイルのパスを指定します（デフォルトは '.clinerules'）
           rules_file: '.clinerules'
           # オプション: レビュー結果をファイルとして保存したい場合にパスを指定します
-          output_path: 'review-result.md'
+          output_path: 'ai-review-report.md'
           # オプション: レビュー対象から除外したいファイルのパターンを指定します
           exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
           # オプション: 出力言語の指定。'ja-JP' (日本語) または 'en-US' (英語) を指定できます。
           language: 'ja-JP'
 
       # 保存したレビュー結果を活用する例（GitHub Artifactとして保存）
-      - name: Upload review result
+      - name: Upload review report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ai-review-report
-          path: review-result.md
+          path: ai-review-report.md
 ```
 
 ### 3. ログの確認・蓄積方法
