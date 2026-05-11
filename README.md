@@ -55,7 +55,7 @@ jobs:
           # オプション: レビュー結果をファイルとして保存したい場合にパスを指定します
           output_path: 'ai-review-report.md'
           # オプション: レビュー対象から除外したいファイルのパターンを指定します
-          exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
+          exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*,vendor/*'
           # オプション: 出力言語の指定。'ja-JP' (日本語) または 'en-US' (英語) を指定できます。
           language: 'ja-JP'
 

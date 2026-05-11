@@ -53,7 +53,7 @@ jobs:
           # Optional: Path to save the review result for accumulation
           output_path: 'ai-review-report.md'
           # Optional: Comma-separated glob patterns to ignore (e.g., lock files, compiled output)
-          exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
+          exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*,vendor/*'
           # Optional: Output language for review comments (e.g., 'en-US' or 'ja-JP'). Defaults to 'ja-JP'.
           language: 'en-US'
 
