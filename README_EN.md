@@ -26,7 +26,7 @@ Get a free API key from [Google AI Studio](https://aistudio.google.com/). Add it
 Create `.github/workflows/ai-pr-reviewer.yml` in your repository:
 
 ```yaml
-name: Gemini AI PR Reviewer
+name: AI PR Reviewer (by Misaki)
 
 on:
   pull_request:

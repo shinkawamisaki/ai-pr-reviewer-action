@@ -20,7 +20,7 @@ Google AI Studio (Gemini API) を活用した、ルールベースで厳格な A
 
 ### 1. Gemini APIキーの取得
 [Google AI Studio](https://aistudio.google.com/) から無料のAPIキーを取得します。
-取得したキーを、導入先リポジトリの **Settings > Secrets and variables > Actions** に `GEMINI_API_KEY` という名前で登録してください。
+取得したキーを、導入先リポジトリ의 **Settings > Secrets and variables > Actions** に `GEMINI_API_KEY` という名前で登録してください。
 
 ### 2. GitHub Actions の設定（利用する側のリポジトリでの作業）
 このAI検閲官を「導入したいプロジェクト（あなたのアプリやインフラのリポジトリ）」に設定を追加します。
@@ -28,7 +28,7 @@ Google AI Studio (Gemini API) を活用した、ルールベースで厳格な A
 導入先リポジトリに `.github/workflows/` というフォルダ（なければ新規作成）を作り、その中に `ai-pr-reviewer.yml` という空のファイルを作成して、以下のコードをコピー＆ペーストしてください。これだけで「ワンパン」で導入可能です：
 
 ```yaml
-name: Gemini AI PR Reviewer
+name: AI PR Reviewer (by Misaki)
 
 on:
   pull_request:
