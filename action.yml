@@ -23,6 +23,10 @@ inputs:
     description: 'Comma-separated glob patterns to ignore (e.g., "*.lock,dist/*,*.json").'
     required: false
     default: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*,vendor/*'
+  language:
+    description: 'Language for the review comments (e.g., "ja-JP", "en-US").'
+    required: false
+    default: 'ja-JP'
 
 runs:
   using: 'docker'
@@ -33,3 +37,4 @@ runs:
     RULES_FILE: ${{ inputs.rules_file }}
     OUTPUT_PATH: ${{ inputs.output_path }}
     EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
+    LANGUAGE: ${{ inputs.language }}

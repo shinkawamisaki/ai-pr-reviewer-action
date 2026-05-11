@@ -52,6 +52,8 @@ jobs:
           output_path: 'review-result.md'
           # Optional: Comma-separated glob patterns to ignore
           exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
+          # Optional: Output language ('en-US' or 'ja-JP'). Defaults to 'ja-JP'.
+          language: 'en-US'
 
       - name: Upload review result
         if: always()

@@ -55,6 +55,8 @@ jobs:
           output_path: 'review-result.md'
           # オプション: レビュー対象から除外したいファイルのパターンを指定します
           exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
+          # オプション: 出力言語の指定。'ja-JP' (日本語) または 'en-US' (英語) を指定できます。
+          language: 'ja-JP'
 
       # 保存したレビュー結果を活用する例（GitHub Artifactとして保存）
       - name: Upload review result

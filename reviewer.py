@@ -81,6 +81,7 @@ def main():
     rules_file = os.environ.get("RULES_FILE", ".clinerules")
     output_path = os.environ.get("OUTPUT_PATH")
     exclude_patterns = os.environ.get("EXCLUDE_PATTERNS", "").split(",")
+    language = os.environ.get("LANGUAGE", "ja-JP")
     github_repository = os.environ.get("GITHUB_REPOSITORY")
     github_event_path = os.environ.get("GITHUB_EVENT_PATH")
     github_workspace = os.environ.get("GITHUB_WORKSPACE", "/github/workspace")
@@ -170,7 +171,7 @@ Your task is to review the following git diff against the provided project rules
 1. Strictly verify if the changes violate any principles defined in the [PROJECT RULES].
 2. Identify security risks, hardcoded secrets, architectural flaws, or rule violations.
 3. If the code requires modifications, provide concrete code suggestions using GitHub's Suggested Changes format (```suggestion ... ```) so developers can easily apply them.
-4. Your entire response and comments MUST be written in Japanese (except for code snippets).
+4. Your entire response and comments MUST be written in {language} (except for code snippets).
 5. Output format:
    - If the code is perfect and compliant: Write "RESULT: PASS" on the first line, followed by a brief encouraging message.
    - If there are violations or risks: Write "RESULT: FAIL" on the first line, followed by detailed reasons and actionable suggestions.
@@ -212,10 +213,16 @@ Your task is to review the following git diff against the provided project rules
 
     if is_fail:
         print("::warning::Violations detected by AI Reviewer.")
-        comment_body = f"### 🤖 AI PR Reviewer\n\n🚨 **プロジェクトルールへの違反、またはセキュリティリスクを検知しました。**\n\n{clean_text}"
+        if language.lower().startswith("ja"):
+            comment_body = f"### 🤖 AI PR Reviewer\n\n🚨 **プロジェクトルールへの違反、またはセキュリティリスクを検知しました。**\n\n{clean_text}"
+        else:
+            comment_body = f"### 🤖 AI PR Reviewer\n\n🚨 **Violations or security risks detected based on project rules.**\n\n{clean_text}"
     else:
         print("::notice::AI Reviewer passed.")
-        comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AIレビューを通過しました。**\n\n{clean_text}"
+        if language.lower().startswith("ja"):
+            comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AIレビューを通過しました。**\n\n{clean_text}"
+        else:
+            comment_body = f"### 🤖 AI PR Reviewer\n\n✅ **AI Review Passed.**\n\n{clean_text}"
 
     try:
         post_or_update_comment(github_repository, pr_number, json_headers, comment_body)
