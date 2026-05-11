@@ -13,7 +13,9 @@ This action automatically reviews Pull Requests against your project's custom ru
   - Suggests exact code modifications (````suggestion````).
   - Skips strict failure checks on Draft PRs.
   - Updates its own PR comments instead of spamming the timeline.
+- **Highly Cost-Effective**: Powered by Google AI Studio's `gemini-2.5-flash` model for high-speed and low-cost operations.
 - **Persistence (Accumulation)**: Review results can be exported as a file and stored using GitHub Artifacts for future analysis and rule improvement.
+- **Multi-language Support**: Review comments can be generated in your preferred language (e.g., English, Japanese).
 
 ## Usage
 
@@ -50,11 +52,12 @@ jobs:
           rules_file: '.clinerules'
           # Optional: Path to save the review result for accumulation
           output_path: 'review-result.md'
-          # Optional: Comma-separated glob patterns to ignore
+          # Optional: Comma-separated glob patterns to ignore (e.g., lock files, compiled output)
           exclude_patterns: '*-lock.json,*-lock.yaml,*.lock,dist/*,node_modules/*'
-          # Optional: Output language ('en-US' or 'ja-JP'). Defaults to 'ja-JP'.
+          # Optional: Output language for review comments (e.g., 'en-US' or 'ja-JP'). Defaults to 'ja-JP'.
           language: 'en-US'
 
+      # Example: Storing the review result using GitHub Artifacts
       - name: Upload review result
         if: always()
         uses: actions/upload-artifact@v4
