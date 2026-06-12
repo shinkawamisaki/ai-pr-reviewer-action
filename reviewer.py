@@ -97,7 +97,17 @@ def get_base_file_content(repository, path, base_sha, raw_headers, workspace):
     except Exception:
         print(f"::warning::Error fetching '{path}' from the base commit. Falling back to the head copy.")
 
-    workspace_path = os.path.join(workspace, path)
+    # Confine the fallback to the workspace. The *_file inputs are repository paths
+    # by contract, but os.path.join passes absolute paths ("/etc/passwd") and "../"
+    # traversal through untouched. Whatever is read here is embedded into the prompt
+    # and sent to the AI provider, so a misconfigured or malicious path must not be
+    # able to exfiltrate files outside the checkout. realpath also resolves symlinks
+    # before the containment check.
+    workspace_root = os.path.realpath(workspace)
+    workspace_path = os.path.realpath(os.path.join(workspace_root, path))
+    if workspace_path != workspace_root and not workspace_path.startswith(workspace_root + os.sep):
+        print(f"::warning::'{path}' resolves outside the workspace. Refusing to read it.")
+        return "", "empty"
     if os.path.exists(workspace_path):
         with open(workspace_path, "r", encoding="utf-8") as f:
             return f.read(), "workspace"
