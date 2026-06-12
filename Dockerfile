@@ -11,8 +11,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code and the bundled default prompt template
 COPY reviewer.py .
+COPY prompts/ ./prompts/
 
 # Execute the reviewer script
 ENTRYPOINT ["python", "/app/reviewer.py"]

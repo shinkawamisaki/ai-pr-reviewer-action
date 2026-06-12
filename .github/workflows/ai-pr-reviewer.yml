@@ -14,6 +14,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      statuses: write  # v3: Draft=Pending を運ぶ commit status の投稿に必要
 
     steps:
       - name: Checkout code

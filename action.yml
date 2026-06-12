@@ -25,9 +25,29 @@ inputs:
     required: false
     default: ''
   rules_file:
-    description: 'Path to the repository rules file (e.g., .clinerules, CONTRIBUTING.md)'
+    description: 'Path to the repository rules file (e.g., .clinerules, CONTRIBUTING.md). Read from the PR base commit.'
     required: false
     default: '.clinerules'
+  active_rules_file:
+    description: 'Path to a precedents file (past human review decisions) that takes priority over the rules. Read from the PR base commit. Optional.'
+    required: false
+    default: ''
+  prompt_file:
+    description: 'Path to a custom review prompt template in your repository (placeholders: {{rules}}, {{active_rules}}, {{diff}}, {{language}}). Read from the PR base commit. Defaults to the prompt bundled with this action.'
+    required: false
+    default: ''
+  strict_verify:
+    description: 'Fail closed: when no verdict can be produced (injection, format drift, API outage), block the merge instead of passing. Set "false" to fail open.'
+    required: false
+    default: 'true'
+  set_commit_status:
+    description: 'Post a commit status (context: status_context) usable as a required status check. Requires "statuses: write" permission. Set "false" to disable.'
+    required: false
+    default: 'true'
+  status_context:
+    description: 'Context name of the commit status posted by this action.'
+    required: false
+    default: 'AI PR Reviewer'
   output_path:
     description: 'Path to save the review result as a file (e.g., review.md). Optional.'
     required: false
@@ -51,6 +71,11 @@ runs:
     ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
     OPENAI_API_KEY: ${{ inputs.openai_api_key }}
     RULES_FILE: ${{ inputs.rules_file }}
+    ACTIVE_RULES_FILE: ${{ inputs.active_rules_file }}
+    PROMPT_FILE: ${{ inputs.prompt_file }}
+    STRICT_VERIFY: ${{ inputs.strict_verify }}
+    SET_COMMIT_STATUS: ${{ inputs.set_commit_status }}
+    STATUS_CONTEXT: ${{ inputs.status_context }}
     OUTPUT_PATH: ${{ inputs.output_path }}
     EXCLUDE_PATTERNS: ${{ inputs.exclude_patterns }}
     LANGUAGE: ${{ inputs.language }}
