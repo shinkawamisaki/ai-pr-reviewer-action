@@ -267,7 +267,6 @@ AIに「どういう基準でレビューしてほしいか」を教えるため
 **shinkawa.misaki**
 
 - **GitHub**: [shinkawamisaki](https://github.com/shinkawamisaki)
-- **YOUTRUST**: [shinkawa](https://youtrust.jp/users/shinkawa)
 - **Email**: [shinkawa.misaki@gmail.com](mailto:shinkawa.misaki@gmail.com)
 
 ## ライセンス
