@@ -265,7 +265,6 @@ Structural hardening as a security gate (fail-closed).
 **shinkawa.misaki**
 
 - **GitHub**: [shinkawamisaki](https://github.com/shinkawamisaki)
-- **YOUTRUST**: [shinkawa](https://youtrust.jp/users/shinkawa)
 - **Email**: [shinkawa.misaki@gmail.com](mailto:shinkawa.misaki@gmail.com)
 
 ## License
