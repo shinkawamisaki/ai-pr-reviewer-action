@@ -33,7 +33,7 @@ inputs:
     required: false
     default: ''
   prompt_file:
-    description: 'Path to a custom review prompt template in your repository (placeholders: {{rules}}, {{active_rules}}, {{diff}}, {{language}}). Read from the PR base commit. Defaults to the prompt bundled with this action.'
+    description: 'Path to a custom review prompt template in your repository (placeholders: {{rules}}, {{active_rules}}, {{diff}}, {{language}}, {{excluded_files}}). Read from the PR base commit. Defaults to the prompt bundled with this action.'
     required: false
     default: ''
   strict_verify:

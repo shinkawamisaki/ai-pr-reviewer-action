@@ -7,6 +7,9 @@ Review the change below (git diff) against the project rules and the precedents.
 [PRECEDENTS — past human review decisions. When a precedent applies, it takes priority over the rules]
 {{active_rules}}
 
+[FILES CHANGED IN THIS PR BUT EXCLUDED FROM REVIEW BY CONFIGURATION — they exist; do not report them as missing]
+{{excluded_files}}
+
 [GIT DIFF]
 <diff>
 {{diff}}

@@ -323,6 +323,7 @@ def main():
     # 1. Fetch Diff
     try:
         diff_content = get_pr_diff(github_repository, pr_number, diff_headers)
+        excluded_files = []
 
         # Apply ignore patterns (Exclude unwanted files from diff)
         if exclude_patterns:
@@ -342,6 +343,7 @@ def main():
                     should_exclude = any(fnmatch.fnmatch(filename, pattern.strip()) for pattern in exclude_patterns if pattern.strip())
                     if should_exclude:
                         print(f"::notice::Excluding file from review: {filename}")
+                        excluded_files.append(filename)
                         continue
 
                 filtered_diff.append(header + content)
@@ -411,14 +413,24 @@ def main():
     #    values, so a placeholder token inside the rules/precedents could re-inject
     #    attacker-controlled diff outside the <diff> delimiters. re.sub in one pass only
     #    touches placeholders that came from the template itself.
+    #    Files excluded by exclude_patterns still exist in the PR. Tell the model so it does
+    #    not report "missing file" for something it simply was not shown. Templates can place
+    #    the list with {{excluded_files}}; older templates get a note at the top of the diff.
+    excluded_list = "\n".join(f"- {f}" for f in excluded_files) if excluded_files else "(none)"
+    if excluded_files and "{{excluded_files}}" not in prompt_template:
+        diff_content_masked = (
+            "[NOTE] The following files are part of this PR but were excluded from review by "
+            "configuration. They exist; do not report them as missing.\n" + excluded_list + "\n\n" + diff_content_masked
+        )
     placeholder_values = {
         "rules": rules_content_masked if rules_content_masked else "No specific rules provided. Use general software engineering best practices.",
         "active_rules": active_rules_masked if active_rules_masked else "(none)",
         "diff": diff_content_masked,
         "language": language,
+        "excluded_files": excluded_list,
     }
     prompt = re.sub(
-        r"\{\{(rules|active_rules|diff|language)\}\}",
+        r"\{\{(rules|active_rules|diff|language|excluded_files)\}\}",
         lambda m: placeholder_values[m.group(1)],
         prompt_template,
     )

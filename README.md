@@ -259,6 +259,11 @@ uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-ha
 
 ## 変更履歴 (Changelog)
 
+### [3.1.4] - 2026-09-19
+- **修正**: `exclude_patterns` で除外したファイルを、AI が「参照先ファイルの欠落」として FAIL にしていた。
+  除外したファイル名の一覧を新しいプレースホルダ `{{excluded_files}}` でプロンプトに渡す（同梱プロンプトに
+  節を追加）。独自プロンプトにプレースホルダが無い場合は diff の先頭に注記を入れる
+
 ### [3.1.3] - 2026-09-19
 - **修正**: `temperature=0` を受け付けないモデル（例 `claude-sonnet-5`。LiteLLM が `UnsupportedParamsError` を返す）で
   レビューが「AI API call failed」で止まっていた。その場合は temperature を外して再試行する（notice を出す。

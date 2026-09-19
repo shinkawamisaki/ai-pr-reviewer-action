@@ -252,6 +252,11 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.4] - 2026-09-19
+- Fix: files skipped via `exclude_patterns` were reported by the model as "missing". Their names are now passed
+  to the prompt through the new `{{excluded_files}}` placeholder (added to the bundled prompt); custom prompts
+  without the placeholder get a note at the top of the diff.
+
 ### [3.1.3] - 2026-09-19
 - Fix: models that reject `temperature=0` (e.g. `claude-sonnet-5`, where LiteLLM raises `UnsupportedParamsError`)
   made the review fail. The reviewer now retries once without `temperature` and logs a notice.
