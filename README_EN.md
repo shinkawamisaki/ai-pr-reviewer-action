@@ -252,6 +252,11 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.5] - 2026-09-19
+- Injection hardening: `{{excluded_files}}` (file names chosen by the PR author) is now wrapped in
+  `<excluded_files>` and covered by instruction 0 in the bundled prompt; control characters are stripped
+  and names are length-capped. Entries carry `(added)` / `(modified)` / `(deleted)`.
+
 ### [3.1.4] - 2026-09-19
 - Fix: files skipped via `exclude_patterns` were reported by the model as "missing". Their names are now passed
   to the prompt through the new `{{excluded_files}}` placeholder (added to the bundled prompt); custom prompts
