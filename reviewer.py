@@ -200,17 +200,24 @@ def call_ai_with_retry(ai_model, prompt):
     workflow was never granted.
     """
     last_error = "unknown error"
+    # temperature=0 for reproducible verdicts. Some models only accept the default
+    # temperature (LiteLLM raises UnsupportedParamsError); for those we retry once
+    # without it rather than failing the review.
+    params = {"model": ai_model, "messages": [{"role": "user", "content": prompt}], "temperature": 0.0}
     for attempt in range(MAX_AI_ATTEMPTS):
         try:
-            response = litellm.completion(
-                model=ai_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
-            )
+            response = litellm.completion(**params)
             result_text = (response.choices[0].message.content or "").strip()
             if not result_text:
                 raise ValueError("empty response")
             return result_text
+        except litellm.UnsupportedParamsError as e:
+            last_error = str(e)
+            if "temperature" in params and "temperature" in last_error:
+                params.pop("temperature")
+                print(f"::notice::Model '{ai_model}' does not accept temperature=0. Retrying with the model's default temperature (verdicts may be less reproducible).")
+                continue
+            break
         except Exception as e:
             last_error = str(e)
             retryable = any(token in last_error for token in ("429", "503", "empty response", "overloaded"))

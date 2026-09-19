@@ -259,6 +259,11 @@ uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-ha
 
 ## 変更履歴 (Changelog)
 
+### [3.1.3] - 2026-09-19
+- **修正**: `temperature=0` を受け付けないモデル（例 `claude-sonnet-5`。LiteLLM が `UnsupportedParamsError` を返す）で
+  レビューが「AI API call failed」で止まっていた。その場合は temperature を外して再試行する（notice を出す。
+  判定の再現性は下がる）。`claude-haiku-4-5` や Gemini は従来どおり temperature=0 で動く
+
 ### [3.1.2] - 2026-09-19
 - **修正**: `model` にプロバイダ接頭辞の無いモデル名（例 `claude-sonnet-5`、`claude-opus-4-7`）を指定すると
   OpenAI 扱いになり `No API key found for provider 'openai'` で止まっていた。プロバイダ判定を LiteLLM の

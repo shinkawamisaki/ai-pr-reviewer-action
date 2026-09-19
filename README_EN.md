@@ -252,6 +252,10 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.3] - 2026-09-19
+- Fix: models that reject `temperature=0` (e.g. `claude-sonnet-5`, where LiteLLM raises `UnsupportedParamsError`)
+  made the review fail. The reviewer now retries once without `temperature` and logs a notice.
+
 ### [3.1.2] - 2026-09-19
 - Fix: a `model` without a provider prefix (e.g. `claude-sonnet-5`, `claude-opus-4-7`) was treated as OpenAI and
   failed with `No API key found for provider 'openai'`. Provider detection now follows LiteLLM's resolver.
