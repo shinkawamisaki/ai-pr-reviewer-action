@@ -259,6 +259,10 @@ uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-ha
 
 ## 変更履歴 (Changelog)
 
+### [3.1.6] - 2026-09-19
+- **修正**: 3.1.5 で、除外ファイルがある PR では判定後に `TypeError: 'str' object is not callable` で落ちていた
+  （ローカル変数 `status` がコミットステータス投稿関数を上書きしていた）。変数名を変更
+
 ### [3.1.5] - 2026-09-19
 - **注入対策**: `{{excluded_files}}` に入るファイル名は PR 作成者が自由に付けられるため、同梱プロンプトで
   `<excluded_files>` で囲み「信頼しないデータ」として指示 0 のガード対象に含めた。エンジン側でも制御文字を

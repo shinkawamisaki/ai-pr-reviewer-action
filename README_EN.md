@@ -252,6 +252,10 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.6] - 2026-09-19
+- Fix: in 3.1.5, PRs with excluded files crashed after the verdict (`TypeError: 'str' object is not callable`;
+  a local variable shadowed the commit-status helper).
+
 ### [3.1.5] - 2026-09-19
 - Injection hardening: `{{excluded_files}}` (file names chosen by the PR author) is now wrapped in
   `<excluded_files>` and covered by instruction 0 in the bundled prompt; control characters are stripped

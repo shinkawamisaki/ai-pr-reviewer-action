@@ -344,9 +344,9 @@ def main():
                     if should_exclude:
                         print(f"::notice::Excluding file from review: {filename}")
                         head = content[:400]
-                        status = "added" if "new file mode" in head else ("deleted" if "deleted file mode" in head else "modified")
+                        change_kind = "added" if "new file mode" in head else ("deleted" if "deleted file mode" in head else "modified")
                         safe_name = re.sub(r"[\x00-\x1f\x7f]", "?", filename)[:200]
-                        excluded_files.append(f"{safe_name} ({status})")
+                        excluded_files.append(f"{safe_name} ({change_kind})")
                         continue
 
                 filtered_diff.append(header + content)
