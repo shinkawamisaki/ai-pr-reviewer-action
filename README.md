@@ -23,6 +23,9 @@ Gemini、Claude、GPT-4o など複数のAIモデルに対応した、ルール�
 
 ## 使い方 (Usage)
 
+各バージョンは同じ番号のタグ（`vX.Y.Z`）で公開しています。`v3` は最新の 3.x を指す移動タグで、
+ワークフローの `uses: shinkawamisaki/ai-pr-reviewer-action@v3` はこれを参照します。
+
 ### 1. APIキーの取得とシークレット登録
 
 使いたいプロバイダーのAPIキーを取得し、導入先リポジトリの **Settings > Secrets and variables > Actions** に登録してください。
