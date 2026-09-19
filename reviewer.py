@@ -225,6 +225,23 @@ def call_ai_with_retry(ai_model, prompt):
 # ==============================================================================
 # Main Logic
 # ==============================================================================
+def resolve_provider(ai_model):
+    """Return LiteLLM's provider name for a model id, or "" if it cannot be resolved.
+
+    An explicit "provider/model" prefix wins. Otherwise ask LiteLLM, which knows that
+    e.g. "claude-*" is Anthropic and "gpt-*" is OpenAI. Unknown ids return "" so the
+    key pre-check is skipped and the completion call reports the real error later.
+    """
+    if "/" in ai_model:
+        return ai_model.split("/", 1)[0]
+    try:
+        _, provider, _, _ = litellm.get_llm_provider(ai_model)
+        return provider or ""
+    except Exception:
+        print(f"::warning::Could not determine the provider for model '{ai_model}'. Skipping the API key pre-check.")
+        return ""
+
+
 def main():
     # Retrieve Environment Variables (Injected by GitHub Actions)
     github_token = os.environ.get("GITHUB_TOKEN")
@@ -246,17 +263,18 @@ def main():
         print("::error::Missing required environment variables.")
         sys.exit(1)
 
-    # Validate that an API key is provided for the selected provider
-    provider = ai_model.split("/")[0] if "/" in ai_model else "openai"
+    # Validate that an API key is provided for the selected provider.
+    # Resolve the provider the same way LiteLLM routes the call (so "claude-sonnet-5" is
+    # recognised as Anthropic even without an "anthropic/" prefix). Providers that use
+    # ambient credentials (e.g. vertex_ai via ADC/WIF) have no key to check.
+    provider = resolve_provider(ai_model)
     api_key_map = {
         "gemini": os.environ.get("GEMINI_API_KEY"),
-        "claude": os.environ.get("ANTHROPIC_API_KEY"),
         "anthropic": os.environ.get("ANTHROPIC_API_KEY"),
         "openai": os.environ.get("OPENAI_API_KEY"),
-        "gpt": os.environ.get("OPENAI_API_KEY"),
     }
     if provider in api_key_map and not api_key_map[provider]:
-        print(f"::error::No API key found for provider '{provider}'. Set the corresponding secret (e.g., GEMINI_API_KEY, ANTHROPIC_API_KEY, OPENAI_API_KEY).")
+        print(f"::error::No API key found for provider '{provider}' (model '{ai_model}'). Set the corresponding secret (GEMINI_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY).")
         sys.exit(1)
 
     with open(github_event_path, "r") as f:

@@ -252,6 +252,10 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.2] - 2026-09-19
+- Fix: a `model` without a provider prefix (e.g. `claude-sonnet-5`, `claude-opus-4-7`) was treated as OpenAI and
+  failed with `No API key found for provider 'openai'`. Provider detection now follows LiteLLM's resolver.
+
 ### [3.1.0] - 2026-07-03
 - **Vertex AI support**: use `model: vertex_ai/gemini-2.5-flash` etc. with WIF/ADC auth instead of an API key (unifies costs into GCP Cloud Billing)
 - Explicitly add `google-auth`, which litellm treats as an optional dependency (without it, `vertex_ai/*` fails with `ImportError: No module named 'google'`; measured on litellm 1.90.2)

@@ -259,6 +259,12 @@ uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-ha
 
 ## 変更履歴 (Changelog)
 
+### [3.1.2] - 2026-09-19
+- **修正**: `model` にプロバイダ接頭辞の無いモデル名（例 `claude-sonnet-5`、`claude-opus-4-7`）を指定すると
+  OpenAI 扱いになり `No API key found for provider 'openai'` で止まっていた。プロバイダ判定を LiteLLM の
+  解決結果（`get_llm_provider`）に合わせ、`claude-*` は Anthropic、`gpt-*` は OpenAI として鍵を確認する。
+  `vertex_ai/*` など鍵を使わないプロバイダは事前確認をスキップする
+
 ### [3.1.1] - 2026-09-19
 - **依存の固定**: `requirements.txt` を全推移依存（62 パッケージ）のバージョン＋ハッシュ固定に変更し、
   Docker ビルドを `pip install --require-hashes` に。直接依存は `requirements.in` に分離
