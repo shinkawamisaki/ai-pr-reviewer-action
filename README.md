@@ -235,7 +235,33 @@ AIに「どういう基準でレビューしてほしいか」を教えるため
 うまく動かない場合は、リポジトリの **Settings > Actions > General > Workflow permissions** が「Read and write permissions」になっているか確認してください。
 
 
+## 依存の更新
+
+依存は `requirements.in`（直接依存・人が編集）と `requirements.txt`（全推移依存をバージョンと
+ハッシュで固定した生成物）の二層です。Docker ビルドは `pip install --require-hashes` で
+インストールするため、固定と一致しない配布物は入りません。ベースイメージも `Dockerfile` で
+パッチバージョンまで固定しています。
+
+更新するときは `requirements.in` のバージョンを変えてから再生成し、ハッシュ付きでインストール
+できることを確認してからコミットしてください（`uv` は `brew install uv` または
+https://docs.astral.sh/uv/ ）。
+
+```bash
+uv pip compile requirements.in --python-version 3.11 --universal --generate-hashes -o requirements.txt
+uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-hashes -r requirements.txt
+```
+
+`requirements.txt` を手で編集しないでください。上げる前に PyPI の公開日と OSV（既知脆弱性）を
+確認する運用を推奨します。
+
 ## 変更履歴 (Changelog)
+
+### [3.1.1] - 2026-09-19
+- **依存の固定**: `requirements.txt` を全推移依存（62 パッケージ）のバージョン＋ハッシュ固定に変更し、
+  Docker ビルドを `pip install --require-hashes` に。直接依存は `requirements.in` に分離
+  （litellm 1.101.0 / requests 2.34.2 / google-auth 2.58.0。いずれも OSV に既知脆弱性なしを確認）
+- ベースイメージを `python:3.11.16-slim` に固定
+- 動作変更なし（入力・出力・判定ロジックは 3.1.0 と同じ）
 
 ### [3.1.0] - 2026-07-03
 - **Vertex AI サポート**: `model: vertex_ai/gemini-2.5-flash` 等で、API キーの代わりに WIF/ADC 認証の Vertex AI を利用可能に（コストを GCP の Cloud Billing に一本化できる）

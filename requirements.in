@@ -1,0 +1,8 @@
+# 直接依存（人が編集するのはこのファイル）。requirements.txt は生成物で、直接編集しない。
+# 生成: uv pip compile requirements.in --python-version 3.11 --universal --generate-hashes -o requirements.txt
+# 更新手順は README の「依存の更新」を参照。
+litellm==1.101.0
+requests==2.34.2
+# Vertex AI (vertex_ai/*) の ADC/WIF 認証に必要。litellm は google-auth を
+# optional 依存にしており、無いと ImportError: No module named 'google' で落ちる
+google-auth==2.58.0

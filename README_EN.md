@@ -233,6 +233,23 @@ Example `.clinerules`:
 - `pull-requests: write` — post and update PR comments (required)
 - `statuses: write` — post the commit status (recommended for v3; without it the action warns and works comment-only, and the draft=pending gate is not enforced)
 
+## Updating dependencies
+
+Dependencies are split into `requirements.in` (direct dependencies, edited by hand) and
+`requirements.txt` (a generated lock of every transitive dependency with versions and hashes).
+The Docker build installs with `pip install --require-hashes`, so nothing that does not match
+the lock can be installed. The base image is pinned to a patch version in the `Dockerfile`.
+
+To update, change the version in `requirements.in`, regenerate the lock, and make sure it
+installs with hashes before committing (`uv`: https://docs.astral.sh/uv/):
+
+```bash
+uv pip compile requirements.in --python-version 3.11 --universal --generate-hashes -o requirements.txt
+uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-hashes -r requirements.txt
+```
+
+Do not edit `requirements.txt` by hand.
+
 ## Changelog
 
 ### [3.1.0] - 2026-07-03
