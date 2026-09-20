@@ -259,6 +259,13 @@ uv venv --python 3.11 --seed /tmp/venv && /tmp/venv/bin/pip install --require-ha
 
 ## 変更履歴 (Changelog)
 
+### [3.1.7] - 2026-09-20
+- **単体テストを追加**（`tests/test_reviewer.py`、33 件、API 呼び出しなし）と CI（`.github/workflows/tests.yml`）。
+  3.1.2〜3.1.6 で本番で踏んだ不具合（プロバイダ判定、temperature 非対応モデル、除外一覧がステータス投稿を壊す）を
+  再発防止のテストとして固定
+- テストできるように、diff の除外処理（`filter_diff`）、プロンプト組み立て（`build_prompt`）、判定の解析
+  （`parse_verdict`）を純粋関数に切り出した。動作は変更なし
+
 ### [3.1.6] - 2026-09-19
 - **修正**: 3.1.5 で、除外ファイルがある PR では判定後に `TypeError: 'str' object is not callable` で落ちていた
   （ローカル変数 `status` がコミットステータス投稿関数を上書きしていた）。変数名を変更
