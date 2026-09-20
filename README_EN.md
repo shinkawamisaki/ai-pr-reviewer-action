@@ -252,6 +252,11 @@ Do not edit `requirements.txt` by hand.
 
 ## Changelog
 
+### [3.1.7] - 2026-09-20
+- Added unit tests (`tests/test_reviewer.py`, 33 cases, no API calls) and a CI workflow. The bugs fixed in
+  3.1.2 to 3.1.6 are now covered by regression tests. Diff filtering, prompt building and verdict parsing
+  were extracted into pure functions; behaviour is unchanged.
+
 ### [3.1.6] - 2026-09-19
 - Fix: in 3.1.5, PRs with excluded files crashed after the verdict (`TypeError: 'str' object is not callable`;
   a local variable shadowed the commit-status helper).

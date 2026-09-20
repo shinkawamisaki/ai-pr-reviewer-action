@@ -1,0 +1,26 @@
+name: Tests
+
+# reviewer.py の単体テスト（AI API・GitHub API は呼ばない。API コストなし）。
+# Dockerfile と同じ Python 3.11、同じハッシュ固定の依存で実行する。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime dependencies (hash-pinned, same as the Docker image)
+        run: pip install --require-hashes -r requirements.txt
+      - name: Install test dependencies
+        run: pip install pytest==9.1.1
+      - name: Run unit tests
+        run: pytest -q
