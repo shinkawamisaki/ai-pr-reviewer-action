@@ -2,7 +2,7 @@
 
 Gemini、Claude、GPT-4o など複数のAIモデルに対応した、ルールベースで厳格な AI Pull Request レビュアー GitHub Action です。
 
-このアクションは、プロジェクト独自のルール（例: `.clinerules` や `CONTRIBUTING.md`）に基づいてPull Requestのコードを自動でレビューします。セキュリティリスク、ハードコードされたシークレット、アーキテクチャ上の欠陥などを検知し、GitHubの「Suggested Changes（修正案の提案）」形式で具体的な修正コードをフィードバックします。
+このアクションは、プロジェクト独自のルール（例: `AGENTS.md` や `CONTRIBUTING.md`）に基づいてPull Requestのコードを自動でレビューします。セキュリティリスク、ハードコードされたシークレット、アーキテクチャ上の欠陥などを検知し、GitHubの「Suggested Changes（修正案の提案）」形式で具体的な修正コードをフィードバックします。
 
 ## 主な機能 (Features)
 - **マルチプロバイダー対応**: Gemini / Claude / GPT-4o など、LiteLLM が対応する100以上のモデルを `model` パラメータ1つで切り替え可能。
@@ -102,10 +102,11 @@ GitHub Variables でモデルを一元管理したい場合は、リポジトリ
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           # オプション: 使用するモデル（デフォルト: 'gemini/gemini-2.5-flash'）
           model: 'gemini/gemini-2.5-flash'
-          # オプション: 読み込ませたいルールファイルのパス（デフォルト: '.clinerules'）
+          # オプション: 読み込ませたいルールファイルのパス（デフォルト: '.clinerules'。
+          #   新規導入なら、ツール非依存の慣習名 'AGENTS.md' を明示するのを推奨）
           # ※ v3 から PR の base コミットから読み込みます（自己参照の遮断）。
           #    PR で新規追加した基準ファイルは採用されず、次の PR から有効になります
-          rules_file: '.clinerules'
+          rules_file: 'AGENTS.md'
           # オプション: 判例ファイル（過去の人間判断）。ルールより優先して適用されます
           active_rules_file: 'logs/active_rules.md'
           # オプション: レビュープロンプトをリポジトリ内のテンプレートに差し替え
@@ -216,9 +217,11 @@ steps:
 
 ### 5. プロジェクトルールの追加（推奨）
 
-AIに「どういう基準でレビューしてほしいか」を教えるため、リポジトリの直下に `.clinerules` や `REVIEW_GUIDELINES.md` というファイルを作成します。
+AIに「どういう基準でレビューしてほしいか」を教えるため、リポジトリの直下に `AGENTS.md`（AI エージェントへの指示を置く慣習名。Claude Code / Codex / Cursor 等も読む）や `REVIEW_GUIDELINES.md` というファイルを作成し、`rules_file` でパスを指定します。既定値は後方互換のため `.clinerules`（Cline 時代の名称）のままです。
 
-`.clinerules` の記述例:
+> **注意: CodeRabbit を併用している場合。** CodeRabbit は `**/AGENTS.md` や `**/CLAUDE.md` を規約ファイルとして自動検出します。このアクションとは別の独立したレビュアーとして運用したい（同じ憲法で二重に審査させたくない）場合は、`.coderabbit.yaml` で `knowledge_base.code_guidelines.enabled: false` を設定してください。
+
+`AGENTS.md` の記述例:
 ```markdown
 # プロジェクト憲法
 1. パスワードやAPIキーは絶対にハードコーディングしないでください。必ず環境変数を使用してください。
